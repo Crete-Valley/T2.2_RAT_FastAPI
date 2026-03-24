@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, conint, confloat
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 import math
 from enum import Enum
 
@@ -18,7 +18,7 @@ from Climate_vulnerability import Climate_vulnerability
 
 from Weather_variables import Weather_variables
 
-
+# barriers & incentives mapping files
 from incentives_mapping import incentives_mapping
 from incentives import incentives
 from incentives_id import incentives_id
@@ -32,8 +32,8 @@ KPI_CATEGORIES = {
     "Cobenefits_KPIs": Co_benefits_KPIs
 }
 
-# Initialize custom KPIs (added by the user) dictionary structure
-custom_kpis: Dict[str, Dict[str, Dict[str, Dict[str, str]]]] = {}
+# Initialization of custom KPIs (added by the user) dictionary structure
+custom_kpis: Dict[str, Dict[str, Dict[str, Dict[str, Any]]]] = {}
 
 
 
@@ -83,31 +83,35 @@ class KPIInput(BaseModel):
     category: KPICategory
     subcategory: str
     id: str
+    selected_primary_use: PrimaryUse
     current_value: Optional[confloat(ge=0)] = None
     target_value: Optional[confloat(ge=0)] = None
     progress_stage: Optional[ProgressStage] = None
-    current_date: conint(ge=1)
-    target_date: conint(ge=1)
+    start_date: conint(ge=1)
+    end_date: conint(ge=1)
     data_quality: conint(ge=1, le=5)
 
 class CustomKPIInput(BaseModel):
     category: KPICategory
-    subcategory: str
-    name: Optional[str] = None
-    primary_use: PrimaryUse
+    subcategory: Optional[str]
+    name: str
+    primary_use: Optional[List[PrimaryUse]]
     units: Optional[str] = None
     description: Optional[str] = None
+    roles: Optional[List[str]] = None
 
 class EditCustomKPIInput(BaseModel):
     name: Optional[str] = None
-    primary_use: PrimaryUse
+    primary_use: Optional[List[PrimaryUse]] = None
     units: Optional[str] = None
     description: Optional[str] = None
+    roles: Optional[List[str]] = None
 
 class KPIRequest(BaseModel):
     selected_kpis: List[KPIInput]
-    a: conint(ge=3, le=5)
-    b: conint(ge=3, le=5)
+    project_start: conint(ge=1)
+    project_end: conint(ge=1)
+    current_date: conint(ge=1)
 
 
 class BarriersInput(BaseModel):
@@ -131,27 +135,70 @@ class VulnerabilityRequest(BaseModel):
     selected_vulnerabilities: List[VulnerabilitySelection]
 
 
-# ================================
-#           Utilities
-# ================================
 
+# Utilities
 def calculate_kpi_score(
     current_value: float, target_value: float,
-    current_date: int, target_date: int,
+    start_date: int, end_date: int, current_date: int,
     data_quality: int, a: int, b: int
-    ) -> float:
+) -> Optional[float]:
 
-    if current_value > target_value:
-        distance = target_value / current_value
+    if current_date < start_date:
+        return None
 
+    if target_value == 0:
+        raise ValueError("Target value cannot be zero.")
+
+    progress = min(current_value / target_value, 1.0)
+
+    # Freeze value after KPI end date
+    effective_current_date = min(current_date, end_date)
+
+    elapsed_fraction = (
+        (effective_current_date - start_date + 1) /
+        (end_date - start_date + 1)
+    )
+
+    # no time penalty if ahead of expected progress
+    if progress >= elapsed_fraction:
+        time_adjusted_progress = progress
     else:
-        if target_value == 0:
-            raise ValueError("Target value cannot be zero when current value is zero.")
-        distance = current_value / target_value
+        time_adjusted_progress = progress * math.exp(-(elapsed_fraction ** a))
 
-    time_adjusted_distance = distance * math.exp(-(current_date / target_date) ** a)
-    final_distance = time_adjusted_distance * (data_quality / 5) ** (1 / b)
-    return round(final_distance, 2)
+    final_progress = time_adjusted_progress * (data_quality / 5) ** (1 / b)
+    return round(final_progress, 2)
+
+
+def calculate_qualitative_kpi_score(
+    distance: float,
+    start_date: int,
+    end_date: int,
+    current_date: int,
+    data_quality: int,
+    a: int,
+    b: int
+) -> Optional[float]:
+    """
+    Returns None if KPI has not started yet, so caller can exclude it from averages.
+    """
+
+    if current_date < start_date:
+        return None
+
+    effective_current_date = min(current_date, end_date)
+
+    elapsed_fraction = (
+        (effective_current_date - start_date + 1) /
+        (end_date - start_date + 1)
+    )
+
+    if distance >= elapsed_fraction:
+        time_adjusted_distance = distance
+    else:
+        time_adjusted_distance = distance * math.exp(-(elapsed_fraction ** a))
+
+    final_score = time_adjusted_distance * (data_quality / 5) ** (1 / b)
+    return round(final_score, 2)
 
 
 def determine_kpi_level(score: float) -> str:
@@ -167,6 +214,10 @@ def determine_kpi_level(score: float) -> str:
         return "Very High"
     return "Invalid"
 
+def convert_score_to_five_scale(score: Optional[float]) -> Optional[float]:
+    if score is None:
+        return None
+    return round(1 + 4 * score, 2)
 
 def determine_risk_level(score: float) -> str:
     if 1 <= score < 5:
@@ -190,7 +241,7 @@ def get_kpis():
 
     # First copy predefined KPIs
     for category, subcats in KPI_CATEGORIES.items():
-        combined[category] = dict(subcats)  # deep copy
+        combined[category] = dict(subcats)
 
     # Then add custom ones
     for category, subcats in custom_kpis.items():
@@ -264,47 +315,59 @@ def get_single_weather_variable(variable_name: WeatherVariables):
 @app.post("/add_custom_kpi")
 def add_custom_kpi(kpi: CustomKPIInput):
     category = kpi.category.value
-    subcategory = kpi.subcategory
+    subcategory = kpi.subcategory or "Custom"
 
-    # Initialize category if missing
+    # Initialize category/subcategory if missing
     if category not in custom_kpis:
         custom_kpis[category] = {}
     if subcategory not in custom_kpis[category]:
         custom_kpis[category][subcategory] = {}
 
-    # Collect ALL existing custom KPI IDs globally
+    # Collect all existing custom KPI IDs globally
     all_existing_ids = []
     for cat_data in custom_kpis.values():
         for subcat_data in cat_data.values():
             all_existing_ids.extend(subcat_data.keys())
 
-    # Find the next available global ID
+    # Find next available global custom KPI ID
     max_num = 0
     for kpi_id in all_existing_ids:
-        if kpi_id.startswith("added_KPI_"):
+        if kpi_id.startswith("custom_KPI_"):
             try:
                 num = int(kpi_id.split("_")[-1])
                 if num > max_num:
                     max_num = num
             except ValueError:
                 continue
-    new_id_num = max_num + 1
-    new_id = f"added_KPI_{new_id_num}"
 
-    # Add KPI metadata
+    new_id = f"custom_KPI_{max_num + 1}"
+
+    # if primary_use is omitted, store empty list
+    primary_uses = [pu.value for pu in kpi.primary_use] if kpi.primary_use else []
+
+    # Store custom KPI
     custom_kpis[category][subcategory][new_id] = {
-        "Name": kpi.name or "",
-        "Primary use": kpi.primary_use, #or ""
+        "Name": kpi.name,
+        "Primary use": primary_uses,
         "Units of measurement": kpi.units or "",
-        "Description": kpi.description or ""
+        "Description": kpi.description or "",
+        "Roles": kpi.roles or []
     }
 
-    return {"message": f"Custom KPI added under {category}/{subcategory} with ID '{new_id}'."}
+    return {
+        "message": f"Custom KPI added under {category}/{subcategory} with ID '{new_id}'.",
+        "id": new_id,
+        "category": category,
+        "subcategory": subcategory
+    }
+
+
+AB_VALUES = [3, 4, 5]
+AB_COMBINATIONS = [(a, b) for a in AB_VALUES for b in AB_VALUES]
 
 
 @app.post("/kpis_score")
 def calculate_kpi_scores(data: KPIRequest):
-    category_scores: Dict[str, Dict] = {}
     seen_ids = set()
 
     stage_to_distance = {
@@ -315,13 +378,61 @@ def calculate_kpi_scores(data: KPIRequest):
         "Near/at completion": 0.9
     }
 
+    if data.project_end <= data.project_start:
+        raise HTTPException(
+            400,
+            f"project_end ({data.project_end}) must be greater than project_start ({data.project_start})."
+        )
+
+    if not (data.project_start <= data.current_date <= data.project_end):
+        raise HTTPException(
+            400,
+            f"current_date ({data.current_date}) must be inside the project timeline "
+            f"[{data.project_start}, {data.project_end}]."
+        )
+
+    # Validate all KPIs once
+    validated_kpis = []
+
     for kpi in data.selected_kpis:
         if kpi.id in seen_ids:
             raise HTTPException(400, f"Duplicate KPI ID found: '{kpi.id}'.")
         seen_ids.add(kpi.id)
 
-        if kpi.target_date <= kpi.current_date:
-            raise HTTPException(400, f"target_date ({kpi.target_date}) must be greater than current_date ({kpi.current_date}) for KPI '{kpi.id}'.")
+        if kpi.end_date <= kpi.start_date:
+            raise HTTPException(
+                400,
+                f"end_date ({kpi.end_date}) must be greater than start_date ({kpi.start_date}) for KPI '{kpi.id}'."
+            )
+
+        if not (data.project_start <= kpi.start_date < kpi.end_date <= data.project_end):
+            raise HTTPException(
+                400,
+                f"KPI '{kpi.id}' has timeline [{kpi.start_date}, {kpi.end_date}] outside project timeline "
+                f"[{data.project_start}, {data.project_end}]."
+            )
+
+        has_current = kpi.current_value is not None
+        has_target = kpi.target_value is not None
+        has_progress_stage = kpi.progress_stage is not None
+
+        if has_current != has_target:
+            raise HTTPException(
+                400,
+                f"KPI '{kpi.id}' must provide both current_value and target_value for numeric mode."
+            )
+
+        if has_current and has_target and has_progress_stage:
+            raise HTTPException(
+                400,
+                f"KPI '{kpi.id}' cannot provide both current/target values and progress_stage. Choose only one mode."
+            )
+
+        if not ((has_current and has_target) or has_progress_stage):
+            raise HTTPException(
+                400,
+                f"KPI '{kpi.id}' must provide either current_value and target_value, or progress_stage."
+            )
 
         predefined_data = KPI_CATEGORIES.get(kpi.category.value, {})
         custom_data = custom_kpis.get(kpi.category.value, {})
@@ -331,37 +442,31 @@ def calculate_kpi_scores(data: KPIRequest):
         if not id_exists:
             raise HTTPException(400, f"KPI ID '{kpi.id}' not found under category '{kpi.category.value}'.")
 
-        # === NEW: Compute score + progress ===
-        if kpi.current_value is not None and kpi.target_value is not None:
-            # numeric mode
-            if kpi.current_value > kpi.target_value:
-                distance = kpi.target_value / kpi.current_value
-            else:
-                if kpi.target_value == 0:
-                    raise HTTPException(400, "Target value cannot be zero when current value is zero.")
-                distance = kpi.current_value / kpi.target_value
+        kpi_entry = None
+        for subcat in predefined_data.values():
+            if kpi.id in subcat:
+                kpi_entry = subcat[kpi.id]
+                break
+        if not kpi_entry:
+            for subcat in custom_data.values():
+                if kpi.id in subcat:
+                    kpi_entry = subcat[kpi.id]
+                    break
 
-            progress_pct = round(distance * 100, 2)
+        if not kpi_entry:
+            raise HTTPException(400, f"KPI ID '{kpi.id}' not found under category '{kpi.category.value}'.")
 
-            score = calculate_kpi_score(
-                kpi.current_value, kpi.target_value,
-                kpi.current_date, kpi.target_date,
-                kpi.data_quality, data.a, data.b
+        allowed_primary_uses = kpi_entry.get("Primary use", [])
+        if isinstance(allowed_primary_uses, str):
+            allowed_primary_uses = [x.strip() for x in allowed_primary_uses.split(",")]
+
+        if allowed_primary_uses and kpi.selected_primary_use.value not in allowed_primary_uses:
+            raise HTTPException(
+                400,
+                f"KPI '{kpi.id}' does not support selected_primary_use '{kpi.selected_primary_use.value}'. "
+                f"Allowed values: {allowed_primary_uses}"
             )
 
-        elif kpi.progress_stage:
-            # qualitative mode
-            distance = stage_to_distance.get(kpi.progress_stage.value)
-            if distance is None:
-                raise HTTPException(400, f"Invalid progress stage '{kpi.progress_stage.value}' for KPI '{kpi.id}'.")
-            progress_pct = round(distance * 100, 2)
-
-            time_adjusted_distance = distance * math.exp(-(kpi.current_date / kpi.target_date) ** data.a)
-            score = round(time_adjusted_distance * (kpi.data_quality / 5) ** (1 / data.b), 2)
-        else:
-            raise HTTPException(400, f"KPI '{kpi.id}' must provide either numeric values or a progress stage.")
-
-        # Get name
         kpi_name = ""
         for subcat in predefined_data.values():
             if kpi.id in subcat:
@@ -373,32 +478,124 @@ def calculate_kpi_scores(data: KPIRequest):
                     kpi_name = subcat[kpi.id].get("Name", "")
                     break
 
-        if kpi.category.value not in category_scores:
-            category_scores[kpi.category.value] = {"scores": [], "kpis": []}
-
-        category_scores[kpi.category.value]["scores"].append(score)
-        category_scores[kpi.category.value]["kpis"].append({
-            "id": kpi.id,
+        validated_kpis.append({
+            "kpi": kpi,
             "name": kpi_name,
-            "mode": "numeric" if kpi.current_value is not None else "qualitative",
-            "progress_stage": kpi.progress_stage.value if kpi.progress_stage else None,
-            "progress (%)": progress_pct,
-            "score": score,
-            "start_date": kpi.current_date,
-            "end_date": kpi.target_date
+            "has_current": has_current,
+            "has_target": has_target,
+            "has_progress_stage": has_progress_stage
         })
 
-    result = {}
-    for category, data in category_scores.items():
-        scores = data["scores"]
-        avg_score = round(sum(scores) / len(scores), 2)
-        result[category] = {
-            "score": avg_score,
-            "level": determine_kpi_level(avg_score),
-            "kpis": data["kpis"]
+    # Compute results for every (a, b)
+    combination_results = {}
+
+    for a, b in AB_COMBINATIONS:
+        category_scores: Dict[str, Dict] = {}
+
+        for item in validated_kpis:
+            kpi = item["kpi"]
+            has_current = item["has_current"]
+            has_target = item["has_target"]
+            has_progress_stage = item["has_progress_stage"]
+            kpi_name = item["name"]
+
+            progress_pct = None
+            score = None
+
+            if has_current and has_target:
+                if kpi.target_value == 0:
+                    raise HTTPException(400, f"Target value cannot be zero for KPI '{kpi.id}'.")
+
+                distance = min(kpi.current_value / kpi.target_value, 1.0)
+
+                if data.current_date < kpi.start_date:
+                    progress_pct = None
+                    score = None
+                else:
+                    progress_pct = round(distance * 100, 2)
+
+                    score = calculate_kpi_score(
+                        kpi.current_value,
+                        kpi.target_value,
+                        kpi.start_date,
+                        kpi.end_date,
+                        data.current_date,
+                        kpi.data_quality,
+                        a,
+                        b
+                    )
+
+            elif has_progress_stage:
+                distance = stage_to_distance.get(kpi.progress_stage.value)
+                if distance is None:
+                    raise HTTPException(400, f"Invalid progress stage '{kpi.progress_stage.value}' for KPI '{kpi.id}'.")
+
+                if data.current_date < kpi.start_date:
+                    progress_pct = None
+                    score = None
+                else:
+                    progress_pct = round(distance * 100, 2)
+
+                    score = calculate_qualitative_kpi_score(
+                        distance,
+                        kpi.start_date,
+                        kpi.end_date,
+                        data.current_date,
+                        kpi.data_quality,
+                        a,
+                        b
+                    )
+
+            if kpi.category.value not in category_scores:
+                category_scores[kpi.category.value] = {"scores": [], "kpis": []}
+
+            if score is not None:
+                category_scores[kpi.category.value]["scores"].append(score)
+
+
+            category_scores[kpi.category.value]["kpis"].append({
+                "id": kpi.id,
+                "name": kpi_name,
+                "selected_primary_use": kpi.selected_primary_use.value,
+                "mode": "numeric" if has_current and has_target else "qualitative",
+                "progress_stage": kpi.progress_stage.value if kpi.progress_stage else None,
+                "progress (%)": progress_pct,
+                "score": score,
+                "start_date": kpi.start_date,
+                "end_date": kpi.end_date,
+            })
+
+        result = {}
+        for category, cat_data in category_scores.items():
+            scores = cat_data["scores"]
+            if scores:
+                avg_score = round(sum(scores) / len(scores), 2)
+                level = determine_kpi_level(avg_score)
+                score_1_to_5 = convert_score_to_five_scale(avg_score)
+            else:
+                avg_score = None
+                level = "Not Available"
+                score_1_to_5 = None
+
+            result[category] = {
+                "score": avg_score,
+                "level": level,
+                "score_1_to_5": score_1_to_5,
+                "kpis": cat_data["kpis"]
+            }
+
+        combination_results[f"a={a},b={b}"] = {
+            "a": a,
+            "b": b,
+            "category_scores": result
         }
 
-    return {"category_scores": result}
+    return {
+        "project_start": data.project_start,
+        "project_end": data.project_end,
+        "current_date": data.current_date,
+        "results_by_ab": combination_results
+    }
 
 
 # barrier → incentive IDs
@@ -416,14 +613,21 @@ barrier_to_incentive_names = {
     for item in incentives_mapping
 }
 
-# Build a fallback if you want incentive objects via ID
+# Fallback if we want incentive objects via ID
 id_to_incentive = {i["id"]: i for i in incentives}
 
 
 @app.post("/barriers_score")
 def calculate_barriers_scores(data: BarriersRequest):
     seen_ids = set()
-    category_data = {}
+    category_data = {
+        persona: {
+            "sum_numerator": 0.0,
+            "sum_likelihood": 0.0,
+            "sum_impact": 0.0
+        }
+        for persona in Barriers_disadvantages.keys()
+    }
 
     for barrier in data.selected_barriers:
         persona = barrier.persona.value
@@ -443,20 +647,12 @@ def calculate_barriers_scores(data: BarriersRequest):
         description = Barriers_disadvantages[persona][barrier_id]
         score = barrier.likelihood * barrier.impact
 
-        # Prepare category slot
-        if persona not in category_data:
-            category_data[persona] = {
-                "sum_numerator": 0.0,
-                "sum_likelihood": 0.0,
-                "sum_impact": 0.0
-            }
-
         cat = category_data[persona]
         cat["sum_numerator"] += score
         cat["sum_likelihood"] += barrier.likelihood
         cat["sum_impact"] += barrier.impact
 
-        # Try to find matching incentives
+        # Find matching incentives
         barrier_name = description.strip()
         matched_ids = barrier_to_incentive_ids.get(barrier_name, [])
         incentives_full = [id_to_incentive[i] for i in matched_ids if i in id_to_incentive]
@@ -466,11 +662,13 @@ def calculate_barriers_scores(data: BarriersRequest):
             "description": description,
             "likelihood": barrier.likelihood,
             "impact": barrier.impact,
-            "incentives": incentives_full  # <-- or [i["incentive"] for i in incentives_full] for names only
+            "incentives": incentives_full
         }
 
-    # Final calculation (corrected formula)
+    # Final calculation
     result = {}
+
+    total_score = 0.0
 
     for persona, values in category_data.items():
         numerator = values["sum_numerator"]
@@ -488,9 +686,18 @@ def calculate_barriers_scores(data: BarriersRequest):
         values["Persona impact"] = round(a, 2)
         values["Persona likelihood"] = round(b, 2)
         values["Persona Risk score"] = round(c, 2)
-        values["Risk level"] = determine_risk_level(c)
+        values["Risk level"] = "None" if c == 0 else determine_risk_level(c)
 
         result[persona] = values
+        total_score += c
+
+    for persona, values in result.items():
+        if total_score == 0:
+            percentage = 0.0
+        else:
+            percentage = (values["Persona Risk score"] / total_score) * 100
+
+        values["Persona Risk percentage"] = round(percentage, 2)
 
     return result
 
@@ -564,11 +771,13 @@ def edit_custom_kpi(
     if data.name is not None:
         kpi_data["Name"] = data.name
     if data.primary_use is not None:
-        kpi_data["Primary use"] = data.primary_use
+        kpi_data["Primary use"] = [pu.value for pu in data.primary_use]
     if data.units is not None:
         kpi_data["Units of measurement"] = data.units
     if data.description is not None:
         kpi_data["Description"] = data.description
+    if data.roles is not None:
+        kpi_data["Roles"] = data.roles
 
     return {"message": f"KPI '{kpi_id}' updated successfully under '{cat}/{subcategory}'.", "updated_kpi": kpi_data}
 
@@ -602,110 +811,5 @@ def delete_custom_kpi(category: KPICategory, subcategory: str, kpi_id: str):
     if not custom_kpis[cat_value]:
         del custom_kpis[cat_value]
 
-    # Additional cleanup for merged get_kpis: remove any lingering keys
-    if category.value in KPI_CATEGORIES:
-        if subcategory in KPI_CATEGORIES[category.value]:
-            # Only remove if it exists in custom_kpis, i.e., a user-added KPI
-            KPI_CATEGORIES[category.value][subcategory].pop(kpi_id, None)
-
     return {"message": f"KPI '{kpi_id}' deleted successfully from '{cat_value}/{subcategory}'."}
 
-
-
-
-@app.post("/kpis_score_primary_use")
-def calculate_kpi_scores_primary_use(data: KPIRequest):
-    primary_use_scores: Dict[str, Dict] = {}
-    seen_ids = set()
-
-    stage_to_distance = {
-        "Very early stage": 0.1,
-        "Early progress": 0.3,
-        "Midway": 0.5,
-        "Advanced": 0.7,
-        "Near/at completion": 0.9
-    }
-
-    for kpi in data.selected_kpis:
-        if kpi.id in seen_ids:
-            raise HTTPException(400, f"Duplicate KPI ID found: '{kpi.id}'.")
-        seen_ids.add(kpi.id)
-
-        if kpi.target_date <= kpi.current_date:
-            raise HTTPException(400, f"target_date ({kpi.target_date}) must be greater than current_date ({kpi.current_date}) for KPI '{kpi.id}'.")
-
-        predefined_data = KPI_CATEGORIES.get(kpi.category.value, {})
-        custom_data = custom_kpis.get(kpi.category.value, {})
-
-        kpi_entry = None
-        for subcat in predefined_data.values():
-            if kpi.id in subcat:
-                kpi_entry = subcat[kpi.id]
-                break
-        if not kpi_entry:
-            for subcat in custom_data.values():
-                if kpi.id in subcat:
-                    kpi_entry = subcat[kpi.id]
-                    break
-
-        if not kpi_entry:
-            raise HTTPException(400, f"KPI ID '{kpi.id}' not found under category '{kpi.category.value}'.")
-
-        # === NEW: progress + score ===
-        if kpi.current_value is not None and kpi.target_value is not None:
-            if kpi.current_value > kpi.target_value:
-                distance = kpi.target_value / kpi.current_value
-            else:
-                if kpi.target_value == 0:
-                    raise HTTPException(400, "Target value cannot be zero when current value is zero.")
-                distance = kpi.current_value / kpi.target_value
-            progress_pct = round(distance * 100, 2)
-
-            score = calculate_kpi_score(
-                kpi.current_value, kpi.target_value,
-                kpi.current_date, kpi.target_date,
-                kpi.data_quality, data.a, data.b
-            )
-
-        elif kpi.progress_stage:
-            distance = stage_to_distance.get(kpi.progress_stage.value)
-            if distance is None:
-                raise HTTPException(400, f"Invalid progress stage '{kpi.progress_stage.value}' for KPI '{kpi.id}'.")
-            progress_pct = round(distance * 100, 2)
-
-            time_adjusted_distance = distance * math.exp(-(kpi.current_date / kpi.target_date) ** data.a)
-            score = round(time_adjusted_distance * (kpi.data_quality / 5) ** (1 / data.b), 2)
-        else:
-            raise HTTPException(400, f"KPI '{kpi.id}' must provide either numeric values or a progress stage.")
-
-        kpi_name = kpi_entry.get("Name", "")
-        primary_use = kpi_entry.get("Primary use")
-        if not primary_use:
-            raise HTTPException(400, f"KPI '{kpi.id}' does not have a defined 'Primary use'.")
-
-        if primary_use not in primary_use_scores:
-            primary_use_scores[primary_use] = {"scores": [], "kpis": []}
-
-        primary_use_scores[primary_use]["scores"].append(score)
-        primary_use_scores[primary_use]["kpis"].append({
-            "id": kpi.id,
-            "name": kpi_name,
-            "mode": "numeric" if kpi.current_value is not None else "qualitative",
-            "progress_stage": kpi.progress_stage.value if kpi.progress_stage else None,
-            "progress (%)": progress_pct,
-            "score": score,
-            "start_date": kpi.current_date,
-            "end_date": kpi.target_date
-        })
-
-    result = {}
-    for primary_use, values in primary_use_scores.items():
-        scores = values["scores"]
-        avg_score = round(sum(scores) / len(scores), 2)
-        result[primary_use] = {
-            "score": avg_score,
-            "level": determine_kpi_level(avg_score),
-            "kpis": values["kpis"]
-        }
-
-    return {"primary_use_scores": result}

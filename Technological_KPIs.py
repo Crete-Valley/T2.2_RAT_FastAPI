@@ -2,64 +2,123 @@ Technological_KPIs = {
 
 "Grid Security": {
 "TGS1": {
-    "Name": "Loss of Load Duration (Blackout Resilience)",
-    "Primary use": "Performance", #tracking
+    "Name": "Loss of Load Duration (blackout resilience)",
+    "Primary use": ["Performance", "Tracking"],
     "Units of measurement": "Minutes",
-    "Description": "Loss of load time to withstand a potential blackout using available flexibility measured annually."
+    "Description": "Estimates minutes/hours per year that critical loads can be supplied during upstream outages using local DER/ESS and islanding procedures; demonstrates resilience capability valued by citizens and authorities.",
+    "Roles": ["CEL Manager", "Asset Operator", "Data/Monitoring Lead"]
         },
 "TGS2": {
-    "Name": "Reduction of RES curtailment",
-    "Primary use": "Performance",
-    "Units of measurement": "%",
-    "Description": "The difference between the renewable energy curtailments before and after the integration of all the proposed solutions."
-        },
-"TGS3": {
-    "Name": "Reduction of peak load",
-    "Primary use": "Performance",
-    "Units of measurement": "%",
-    "Description": "The difference between the grid peak load before and after the integration of all the proposed solutions."
-        },
-"TGS4": {
-    "Name": "Frequency deviation ratio (FDR)",
+    "Name": "Reduction of RES curtailment for the Transmission Network",
     "Primary use": "Tracking",
-    "Units of measurement": "-",
-    "Description": "Represents the extent of deviation in the electrical frequency from its nominal value throughout the period of examination."
+    "Units of measurement": "%",
+    "Description": "The difference between the renewable energy curtailments at transmission network level before and after the integration of all the proposed solutions.",
+    "Roles": ["TSO", "Aggregator/Flexibility Provider", "Data/Monitoring Lead"]
+},
+"TGS3": {
+    "Name": " Reduction of peak load for the Transmission Network",
+    "Primary use": "Tracking",
+    "Units of measurement": "%",
+    "Description": "The difference between the transmission grid peak load before and after the integration of all the proposed solutions.",
+    "Roles": ["TSO", "Aggregator/Flexibility Provider", "Data/Monitoring Lead"]
+},
+"TGS4": {
+    "Name": "Reduction of RES curtailment for the Distribution Network",
+    "Primary use": "Tracking",
+    "Units of measurement": "%",
+    "Description": "The difference between the renewable energy curtailments at distribution network before and after the integration of all the proposed solutions.",
+    "Roles": ["DSO", "Aggregator/Flexibility Provider", "Data/Monitoring Lead"]
         },
 "TGS5": {
-    "Name": "Effect of event in which the REV has been involved",
-    "Primary use": "Performance",
-    "Units of measurement": "Rδν/event (each tracked involvement factor/event) or %",
-    "Description": "Quantifies the extent of each occurrence where the CEL/REV-Lab participates in events affecting the broader main grid (on frequency control, control and management of voltage and reactive power for system stability, other..) throughout the period of examination."
-        },
+    "Name": " Reduction of peak load for the Distribution Network",
+    "Primary use": "Tracking",
+    "Units of measurement": "%",
+    "Description": "The difference between the distribution grid peak load before and after the integration of all the proposed solutions.",
+    "Roles": ["DSO", "Aggregator/Flexibility Provider", "Data/Monitoring Lead"]
+},
 "TGS6": {
-    "Name": "Voltage deviation ratio (VDR)",
+    "Name": "Frequency deviation ratio (FDR)",
     "Primary use": "Tracking",
     "Units of measurement": "%",
-    "Description": "Quantifies the extent of deviation in voltage from its nominal value throughout the period of examination"
-        },
+    "Description": "Measures the share of time system frequency is outside the allowed band or the RMS deviation; reflects stability performance in a DER-rich context.",
+    "Roles": ["TSO", "Aggregator/Flexibility Provider", "Data/Monitoring Lead"]
+},
 "TGS7": {
-    "Name": "Energy Curtailment of RES/DERs",
-    "Primary use": "Tracking",
-    "Units of measurement": "MWh/year",
-    "Description": "Amount of renewable energy curtailed during a year due to grid operators requests."
-        },
+    "Name": "Impact of events involving the REV",
+    "Primary use": "Performance",
+    "Units of measurement": "R_δv/event (each tracked involvement factor/event)",
+    "Description": "Counts and characterises events where REV assets supported distribution system needs (frequency, voltage/reactive, congestion), including delivered service volumes; evidences useful services to DSO/TSO and markets.",
+    "Roles": ["DSO", "Aggregator/Flexibility Provider", "CEL Manager"]
+},
 "TGS8": {
-    "Name": "Active power capability",
+    "Name": "Voltage deviation ratio (VDR) for the Transmission Network",
     "Primary use": "Tracking",
     "Units of measurement": "%",
-    "Description": "Capacity for active power management. The active power at the primary substation is considered."
-        },
+    "Description": "Measures the share of time monitored transmission network buses exceed voltage limits or the RMS deviation; ensures power quality for customers and asset longevity.",
+    "Roles": ["TSO", "Aggregator/Flexibility Provider", "Data/Monitoring Lead"]
+},
 "TGS9": {
-    "Name": "Reactive power capability",
+    "Name": "Voltage deviation ratio (VDR) for the Distribution Network",
     "Primary use": "Tracking",
     "Units of measurement": "%",
-    "Description": "Capacity for reactive power management. The reactive power at the primary substation is considered."
-        },
+    "Description": "Measures the share of time monitored distribution network buses exceed voltage limits or the RMS deviation; ensures power quality for customers and asset longevity.",
+    "Roles": ["DSO", "Aggregator/Flexibility Provider", "Data/Monitoring Lead"]
+},
 "TGS10": {
-    "Name": "Grid efficiency improvement",
+    "Name": "Energy curtailment of RES/DERs for the Transmission Network",
+    "Primary use": "Tracking",
+    "Units of measurement": "MWh/y",
+    "Description": "Sums renewable/DER energy curtailed over a year due to transmission network or market constraints; highlights lost green output and where flexibility or grid upgrades are most valuable.",
+    "Roles": ["TSO", "Asset Operator", "Data/Monitoring Lead"]
+        },
+"TGS11": {
+    "Name": "Energy curtailment of RES/DERs for the Distribution Network",
+    "Primary use": "Tracking",
+    "Units of measurement": "MWh/y",
+    "Description": "Sums renewable/DER energy curtailed over a year due to distribution network or market constraints; highlights lost green output and where flexibility or grid upgrades are most valuable.",
+    "Roles": ["DSO", "Asset Operator", "Data/Monitoring Lead"]
+        },
+"TGS12": {
+    "Name": "Active power capability for the Transmission Network",
     "Primary use": "Tracking",
     "Units of measurement": "%",
-    "Description": "This indicator demonstrates the power losses throughout the period of examination."
+    "Description": "States available upward/downward active power from REV assets at the primary substation during service windows; indicates ability to provide balancing and congestion relief.",
+    "Roles": ["Aggregator/Flexibility Provider", "TSO", "Asset Operator"]
+        },
+"TGS13": {
+    "Name": "Active power capability for the Distribution Network",
+    "Primary use": "Tracking",
+    "Units of measurement": "%",
+    "Description": "States available upward/downward active power from REV assets at the primary substation during service windows; indicates ability to provide balancing and congestion relief.",
+    "Roles": ["Aggregator/Flexibility Provider", "TSO", "Asset Operator"]
+        },
+"TGS14": {
+    "Name": "Reactive power capability for the Transmission Network",
+    "Primary use": "Tracking",
+    "Units of measurement": "%",
+    "Description": "States available leading/lagging reactive power from REV assets at the transmission node; indicates potential to support voltage and increase RES hosting capacity.",
+    "Roles": ["TSO", "Aggregator/Flexibility Provider", "Asset Operator"]
+        },
+"TGS15": {
+    "Name": "Reactive power capability for the Distribution Network",
+    "Primary use": "Tracking",
+    "Units of measurement": "%",
+    "Description": "States available leading/lagging reactive power from REV assets at the distribution  node; indicates potential to support voltage and increase RES hosting capacity.",
+    "Roles": ["DSO", "Aggregator/Flexibility Provider", "Asset Operator"]
+        },
+"TGS16": {
+    "Name": "Grid‑efficiency improvement (losses) for the Transmission Network",
+    "Primary use": "Tracking",
+    "Units of measurement": "%",
+    "Description": "Reports the change in transmission network losses (MWh or %) within the boundary; captures efficiency gains from local balancing and better power flows.",
+    "Roles": ["TSO", "Data/Monitoring Lead", "Municipal Energy Office"]
+        },
+"TGS17": {
+    "Name": "Grid‑efficiency improvement (losses) for the Distribution Network",
+    "Primary use": "Tracking",
+    "Units of measurement": "%",
+    "Description": "Reports the change in  distribution network losses (MWh or %) within the boundary; captures efficiency gains from local balancing and better power flows.",
+    "Roles": ["DSO", "Data/Monitoring Lead", "Municipal Energy Office"]
         },
 },
 
@@ -67,86 +126,100 @@ Technological_KPIs = {
 "TEI1": {
      "Name": "Total renewable electricity production",
      "Primary use": "Tracking",
-     "Units of measurement": "kWh el/year",
-     "Description": "Total renewable electricity production within the area of examination."
+     "Units of measurement": "kWh el/y",
+     "Description": "Sums annual kWh from PV, wind, biogas-CHP and fuel-cell electricity within the boundary; headline indicator of the REV’s green power output.",
+     "Roles": ["Asset Operator", "Data/Monitoring Lead", "Municipal Energy Office"]
          },
 "TEI2": {
      "Name": "Total renewable thermal production",
      "Primary use": "Tracking",
-     "Units of measurement": "kWh th/year",
-     "Description": "Total renewable thermal production within the area of examination."
-         },
+     "Units of measurement": "kWh th/y",
+     "Description": "Sums annual kWh(th) from geothermal, biomass/biogas and solar thermal; headline indicator of green heat provision.",
+     "Roles": ["Asset Operator", "Data/Monitoring Lead", "Municipal Energy Office"]
+},
 "TEI3": {
-     "Name": "Share of electricity demand covered from renewable energy sources (RES)",
+     "Name": "Share of electricity demand covered by RES",
      "Primary use": "Tracking",
      "Units of measurement": "%",
-     "Description": "RES penetration for covering electricity needs within the area of examination."
-         },
+     "Description": "Reports the fraction of local electricity demand met by locally used RES electricity; measures self-sufficiency and import reduction.",
+     "Roles": ["CEL Manager", "Municipal Energy Office", "Data/Monitoring Lead"]
+},
 "TEI4": {
      "Name": "Share of thermal demand covered by RES",
      "Primary use": "Tracking",
      "Units of measurement": "%",
-     "Description": "RES penetration for covering thermal needs within the area of examination."
-         },
+     "Description": "Reports the fraction of local thermal demand met by renewable heat; measures progress in decarbonising heating and cooling.",
+     "Roles": ["CEL Manager", "Municipal Energy Office", "Data/Monitoring Lead"]
+},
 "TEI5": {
-    "Name": "Installed capacity of RES (thermal)",
+    "Name": "Installed RES capacity (thermal)",
     "Primary use": "Planning",
     "Units of measurement": "MW",
-    "Description": "The total amount of thermal RES capacity installed within the area of examination."
+    "Description": "Reports commissioned thermal RES capacity in kW(th) within the boundary; indicates readiness of assets to deliver renewable heat.",
+    "Roles": ["Asset Operator", "Municipal Energy Office", "CEL Manager"]
         },
 "TEI6": {
-    "Name": "Installed capacity of RES (electrical)",
+    "Name": "Installed RES capacity (electrical)",
     "Primary use": "Planning",
     "Units of measurement": "MW",
-    "Description": "The total amount of electrical RES capacity installed within the area of examination."
-        },
+    "Description": "Reports commissioned electrical RES capacity in kW(el) within the boundary; indicates readiness of assets to deliver renewable power.",
+    "Roles": ["Asset Operator", "Municipal Energy Office", "CEL Manager"]
+},
 "TEI7": {
      "Name": "Electricity demand satisfied by PVs",
      "Primary use": "Tracking",
      "Units of measurement": "%",
-     "Description": "Percentage of electricity demand covered by PV electricity production within the area of examination measured annually."
-         },
+     "Description": "Reports the share of local electricity demand met by PV generation used in the boundary annually; clarifies PV’s contribution and diversification.",
+     "Roles": ["Asset Operator", "Data/Monitoring Lead", "Municipal Energy Office"]
+},
 "TEI8": {
      "Name": "Electricity demand satisfied by wind",
      "Primary use": "Tracking",
      "Units of measurement": "%",
-     "Description": "Percentage of electricity demand covered by wind electricity production within the area of examination measured annually."
-         },
+     "Description": "Reports the share of local electricity demand met by wind generation used in the boundary annually; clarifies wind’s contribution and diversification.",
+     "Roles": ["Asset Operator", "Data/Monitoring Lead", "Municipal Energy Office"]
+},
 "TEI9": {
      "Name": "Electricity demand satisfied by hydrogen",
      "Primary use": "Tracking",
      "Units of measurement": "%",
-     "Description": "Percentage of electricity demand covered by hydrogen electricity production within the area of examination measured annually."
-         },
+     "Description": "Reports the share of local electricity demand met by hydrogen-derived electricity within the boundary annually; clarifies the role of H₂ in the supply mix.",
+     "Roles": ["Asset Operator", "Data/Monitoring Lead", "Municipal Energy Office"]
+},
 "TEI10": {
      "Name": "Electricity demand satisfied by biogas",
      "Primary use": "Tracking",
      "Units of measurement": "%",
-     "Description": "Percentage of electricity demand covered by biogas electricity production within the area of examination measured annually."
-         },
+     "Description": "Reports the share of local electricity demand met by biogas-derived electricity within the boundary annually; clarifies the role of biogas in the supply mix.",
+     "Roles": ["Asset Operator", "Data/Monitoring Lead", "Municipal Energy Office"]
+},
 "TEI11": {
     "Name": "Thermal demand satisfied by biomass",
     "Primary use": "Tracking",
     "Units of measurement": "%",
-    "Description": "Percentage of thermal demand covered by biomass thermal energy production within the area of examination measured annually."
-        },
+    "Description": "Reports the share of local thermal demand met by biomass heat annually; clarifies biomass’s contribution to heating.",
+    "Roles": ["Asset Operator", "Data/Monitoring Lead", "Municipal Energy Office"]
+},
 "TEI12": {
     "Name": "Thermal demand satisfied by hydrogen",
     "Primary use": "Tracking",
     "Units of measurement": "%",
-    "Description": "Percentage of thermal demand covered by hydrogen thermal energy production within the area of examination measured annually."
-        },
+    "Description": "Reports the share of local thermal demand met by hydrogen-derived heat annually; clarifies hydrogen’s contribution to heating.",
+    "Roles": ["Asset Operator", "Data/Monitoring Lead", "Municipal Energy Office"]
+},
 "TEI13": {
     "Name": "Thermal demand satisfied by biogas",
     "Primary use": "Tracking",
     "Units of measurement": "%",
-    "Description": "Percentage of thermal demand covered by biogas thermal energy production within the area of examination measured annually."
-        },
+    "Description": "Reports the share of local thermal demand met by biogas heat annually; clarifies biogas contribution to heating.",
+    "Roles": ["Asset Operator", "Data/Monitoring Lead", "Municipal Energy Office"]
+},
 "TEI14": {
     "Name": "Thermal demand satisfied by geothermal energy",
     "Primary use": "Tracking",
     "Units of measurement": "%",
-    "Description": "Percentage of thermal demand covered by geothermal energy production within the area of examination measured annually."
+    "Description": "Reports the share of local thermal demand met by geothermal heat annually; clarifies geothermal’s contribution to heating.",
+    "Roles": ["Data/Monitoring Lead", "Municipal Energy Office", "CEL Manager"]
         },
  },
 
@@ -154,21 +227,24 @@ Technological_KPIs = {
 "TES1": {
     "Name": "Total energy consumption savings",
     "Primary use": "Tracking",
-    "Units of measurement": "MWh/year",
-    "Description": "Difference in energy consumed by the members of the community within the period of examination compared to their consumption before the participation in the CEL/REV-Lab."
+    "Units of measurement": "MWh/y",
+    "Description": "Reports the reduction in final energy use versus baseline (weather-normalised) within the boundary; shows demand-side impact on bills and emissions.",
+    "Roles": ["CEL Manager", "Municipal Energy Office", "Asset Operator"]
         },
 "TES2": {
     "Name": "Energy diversity for cooling & heating",
     "Primary use": "Planning",
-    "Units of measurement": "-",
-    "Description": "How many sources and technologies (biogas plant, biomass plant, CHP, PVs...) are utilized for cooling & heating needs within the area of examination."
-        },
+    "Units of measurement": "Number",
+    "Description": "Counts the distinct thermal supply technologies in active use (or applies a diversity index); signals resilience to supply or price shocks.",
+    "Roles": ["CEL Manager", "Municipal Energy Office", "Asset Operator"]
+},
 "TES3": {
     "Name": "Energy diversity for electricity",
     "Primary use": "Planning",
     "Units of measurement": "Number",
-    "Description": "How many sources and technologies (biogas plant, biomass plant, CHP, PVs...) are utilized for electricity needs within the area of examination."
-        },
+    "Description": "Counts the distinct electrical sources in active use (or applies a diversity index); signals robustness and flexibility of the supply mix.",
+    "Roles": ["CEL Manager", "Municipal Energy Office", "Asset Operator"]
+},
 },
 
 "Energy Autonomy":{
@@ -176,131 +252,151 @@ Technological_KPIs = {
     "Name": "Energy savings from the grid",
     "Primary use": "Performance",
     "Units of measurement": "MWh/year",
-    "Description": "The reduction in energy consumed from the grid due to the renewable energy installed within the area of examination."
+    "Description": "Reports the reduction in grid electricity imports relative to baseline; evidences growing autonomy and lower exposure to external prices.",
+    "Roles": ["Data/Monitoring Lead", "Municipal Energy Office"]
         },
 "TEA2": {
-    "Name": "External Energy consumption",
+    "Name": "External energy consumption (imports)",
     "Primary use": "Performance",
     "Units of measurement": "%",
-    "Description": "Amount of energy imported from the rest of the grid relative to all consumed energy within the area of examination for a period of one year. All energy use that cannot be covered by local energy needs to be covered by imported energy."
-        },
+    "Description": "Reports imported energy as a share of total consumption; tracks remaining dependency that local assets must cover over time.",
+    "Roles": ["TSO", "Data/Monitoring Lead", "Market/Trading Lead"]
+},
 "TEA3": {
     "Name": "Local energy exported",
     "Primary use": "Performance",
     "Units of measurement": "%",
-    "Description": "Amount of energy exported  to the grid relative to all generated energy within the area and period of examination."
-        },
+    "Description": "Reports exported energy as a share of local generation; shows surplus availability, market linkage and potential revenues.",
+    "Roles": ["DSO", "Asset Operator", "CEL Manager", "Data/Monitoring Lead"]
+},
 "TEA4": {
-    "Name": "Total Storage Capacity (ESS, H2)",
+    "Name": "Total storage capacity (ESS, H₂)",
     "Primary use": "Planning",
     "Units of measurement": "kWh",
-    "Description": "Combined energy storage capacity."
-        },
+    "Description": "Sums usable storage capacity across vectors in MWh(eq); indicates flexibility buffer for peak shaving, resilience and arbitrage.",
+    "Roles": ["Asset Operator", "Data/Monitoring Lead", "O&M Contractor"]
+},
 },
 
 "Generation Technologies Efficiency":{
 "TTE1": {
-    "Name": "Energy production efficiency (Hydrogen)",
+    "Name": "Energy production efficiency – PV",
     "Primary use": "Performance",
     "Units of measurement": "%",
-    "Description": "How much of the maximum potential energy output was actually achieved annually (hydrogen)."
-        },
+    "Description": "Compares actual annual PV output with expected potential (capacity factor or utilisation); reveals siting, O&M and curtailment issues affecting performance.",
+    "Roles": ["Asset Operator", "Data/Monitoring Lead", "O&M Contractor"]
+},
 "TTE2": {
-    "Name": "Energy production efficiency (Biomass plant)",
+    "Name": "Energy production efficiency – Wind",
     "Primary use": "Performance",
     "Units of measurement": "%",
-    "Description": "How much of the maximum potential energy output was actually achieved annually (Biomass Plant)."
-        },
+    "Description": "Compares actual annual wind output with expected potential (capacity factor or utilisation); reveals siting, O&M and curtailment issues affecting performance.",
+    "Roles": ["Asset Operator", "Data/Monitoring Lead", "O&M Contractor"]
+},
 "TTE3": {
-    "Name": "Energy production efficiency (Geothermal)",
+    "Name": "Energy production efficiency – Biomass electricity",
     "Primary use": "Performance",
     "Units of measurement": "%",
-    "Description": "How much of the maximum potential energy output was actually achieved annually (Geothermal)."
-        },
+    "Description": "Compares actual annual biomass electricity output with expected potential; highlights fuel/logistics and O&M performance.",
+    "Roles": ["Asset Operator", "Data/Monitoring Lead", "O&M Contractor"]
+},
 "TTE4": {
-    "Name": "Energy production efficiency (PV)",
+    "Name": "Energy production efficiency – Biogas electricity",
     "Primary use": "Performance",
     "Units of measurement": "%",
-    "Description": "How much of the maximum potential energy output was actually achieved annually (PV)."
-        },
+    "Description": "Compares actual annual biogas electricity output with expected potential; highlights feedstock, CHP uptime and network constraints.",
+    "Roles": ["Asset Operator", "Data/Monitoring Lead", "O&M Contractor"]
+},
 "TTE5": {
-    "Name": "Energy production efficiency (Wind)",
+    "Name": "Energy production efficiency – Biogas thermal",
     "Primary use": "Performance",
     "Units of measurement": "%",
-    "Description": "How much of the maximum potential energy output was actually achieved annually (Wind)."
-        },
+    "Description": "Compares actual annual biogas thermal output with expected potential; highlights feedstock supply and heat-network utilisation.",
+    "Roles": ["Asset Operator", "Data/Monitoring Lead", "O&M Contractor"]
+},
 "TTE6": {
-    "Name": "Efficiency metric for batteries",
+    "Name": "Energy production efficiency – Geothermal",
     "Primary use": "Performance",
     "Units of measurement": "%",
-    "Description": "Round trip efficiency - Round trip efficiency is the combined loss of energy added to and withdrawn from a battery."
-        },
+    "Description": "Compares actual annual geothermal heat output with expected potential; highlights subsurface/resource and system availability.",
+    "Roles": ["Asset Operator", "Data/Monitoring Lead", "O&M Contractor"]
+},
 "TTE7": {
-    "Name": "Thermal energy production efficiency (biogas)",
+    "Name": "Energy production efficiency – Hydrogen fuel cell",
     "Primary use": "Performance",
     "Units of measurement": "%",
-    "Description": "How much of the maximum potential thermal output was actually achieved annually (biogas)."
-        },
+    "Description": "Compares actual annual electricity from fuel cells with expected potential; highlights H₂ supply, conversion efficiency and uptime.",
+    "Roles": ["Asset Operator", "Data/Monitoring Lead", "Aggregator/Flexibility Provider"]
+},
 "TTE8": {
-    "Name": "Electric energy production efficiency (biogas)",
+    "Name": "Battery round‑trip efficiency",
     "Primary use": "Performance",
     "Units of measurement": "%",
-    "Description": "How much of the maximum potential electricity output was actually achieved annually (biogas)."
+    "Description": "Reports discharged energy divided by charged energy over a representative period; quantifies conversion losses that affect economics and sizing.",
+    "Roles": ["Asset Operator", "O&M Contractor", "Data/Monitoring Lead"]
         },
 "TTE9": {
     "Name": "Availability of the renewable energy source",
     "Primary use": "Tracking",
     "Units of measurement": "%",
-    "Description": "Availability KPIs measure the extent to which the renewable energy source was generating electricity throughout the period of examination."
-        },
+    "Description": "Reports the proportion of time an asset is available for dispatch; indicates operational reliability and service readiness.",
+    "Roles": ["Community Energy Manager", "Market/Trading Lead", "CEL Manager"]
+},
 },
 
 "Trading and Markets":{
 "TM1": {
-    "Name": "Amount of energy exchanged by means of P2P energy trading",
+    "Name": "Energy exchanged via P2P trading",
     "Primary use": "Tracking",
     "Units of measurement": "MWh",
-    "Description": "Measures the volume of energy traded directly between users within a Peer-to-Peer (P2P) energy trading system throughout the period of examination."
-        },
+    "Description": "Sums kWh traded directly between peers within the platform boundary; demonstrates prosumer engagement and local market activity that can lower system costs.",
+    "Roles": ["Market/Trading Lead", "Aggregator/Flexibility Provider", "CEL Manager"]
+},
 "TM2": {
-    "Name": "REV revenues from participation in the DAM",
+    "Name": "REV revenues from DAM participation",
     "Primary use": "Performance",
-    "Units of measurement": "EUR or EUR/MWh",
-    "Description": "REV revenues generated from DAM participation over the period of examination."
-        },
+    "Units of measurement": "€ or €/MWh",
+    "Description": "Reports net revenues attributable to REV assets in the day-ahead market; shows monetisation potential to sustain OPEX and reinvestment.",
+    "Roles": ["Market/Trading Lead", "Municipal Energy Office", "Data/Monitoring Lead"]
+},
 "TM3": {
-    "Name": "Social welfare increase from REV participating in DAM",
+    "Name": "Social welfare increase from REV in DAM",
     "Primary use": "Performance",
-    "Units of measurement": "EUR",
-    "Description": "Measures the increase of DAM social welfare as a result of REV participation in the DAM."
-        },
+    "Units of measurement": "€",
+    "Description": "Estimates the change in market social surplus caused by REV participation versus a counterfactual; evidences system-level benefits for regulators and policymakers.",
+    "Roles": ["Transport Authority/CPO", "Municipal Energy Office", "Data/Monitoring Lead"]
+},
 },
 
 "Transportation": {
 "TT1": {
-    "Name": "Energy consumption of the public EV chargers",
+    "Name": "Energy consumption of public EV chargers",
     "Primary use": "Tracking",
-    "Units of measurement": "MWh/day or MWh/year",
-    "Description": "Quantifies the amount of electricity consumed by publicly accessible Electric Vehicle (EV) chargers."
-        },
+    "Units of measurement": "MWh/day or MWh/y",
+    "Description": "Reports metered kWh delivered by public chargers in the boundary; indicates scale and growth of e-mobility services for planning and tariffs.",
+    "Roles": ["Transport Authority/CPO", "Fleet/Transport Authority", "CEL Manager"]
+},
 "TT2": {
-    "Name": "Storage capacity of the PEV batteries offered through V2G service",
+    "Name": "PEV battery capacity offered via V2G",
     "Primary use": "Tracking",
     "Units of measurement": "MWh/day",
-    "Description": "Represents the total energy storage capacity of Plug-in Electric Vehicle (PEV) batteries utilized in Vehicle-to-Grid (V2G) services."
-        },
+    "Description": "Reports aggregate usable capacity from enrolled vehicles providing V2G; indicates mobilisable flexibility for peak shaving and ancillary services.",
+    "Roles": ["Transport Authority/CPO", "Asset Operator", "Data/Monitoring Lead"]
+},
 "TT3": {
-    "Name": "Fuel efficiency before and after",
+    "Name": "Fuel efficiency before and after (transport)",
     "Primary use": "Performance",
     "Units of measurement": "Lt/km",
-    "Description": "Efficiency of the alternative fuel compared to the conventional one."
-        },
+    "Description": "Reports the change in energy per kilometre for the same duty cycle when switching technologies (e.g., diesel to EV or hydrogen); links technology choice to operating cost and emissions.",
+    "Roles": ["Transport Authority/CPO", "Municipal Transport Office", "Data/Monitoring Lead"]
+},
 "TT4": {
-    "Name": "Fuel consumption for in-boundary transportation per fuel type",
+    "Name": "Fuel consumption for in‑boundary transport by fuel",
     "Primary use": "Tracking",
     "Units of measurement": "MJ/kg/kWh",
-    "Description": "Fuel consumption for in-boundary transportation per fuel type within the period of examination."
-        },
+    "Description": "Reports annual consumption split by fuel type (diesel, petrol, electricity, hydrogen, etc.); maps the mobility energy mix and targets for transition.",
+    "Roles": ["Finance/PMO", "Municipal Energy Office", "Investor/ESCO"]
+},
 },
 
 }
